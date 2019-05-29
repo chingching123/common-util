@@ -1,4 +1,4 @@
-package com.fpx;
+package com.fpx.common.util;
 
 /**
  * Twitter_Snowflake<br>
