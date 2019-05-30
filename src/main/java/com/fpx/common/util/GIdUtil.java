@@ -18,15 +18,15 @@ public class GIdUtil {
     private final long twepoch = 1420041600000L;
 
     /** 机器id所占的位数 */
-    private final long workerIdBits = 5L;
+    private final long workerIdBits = 8L;
 
     /** 数据标识id所占的位数 */
-    private final long datacenterIdBits = 5L;
+    private final long datacenterIdBits = 4L;
 
-    /** 支持的最大机器id，结果是31 (这个移位算法可以很快的计算出几位二进制数所能表示的最大十进制数) */
+    /** 支持的最大机器id，结果是255 (这个移位算法可以很快的计算出几位二进制数所能表示的最大十进制数) */
     private final long maxWorkerId = -1L ^ (-1L << workerIdBits);
 
-    /** 支持的最大数据标识id，结果是31 */
+    /** 支持的最大数据标识id，结果是15 */
     private final long maxDatacenterId = -1L ^ (-1L << datacenterIdBits);
 
     /** 序列在id中占的位数 */
@@ -35,10 +35,10 @@ public class GIdUtil {
     /** 机器ID向左移12位 */
     private final long workerIdShift = sequenceBits;
 
-    /** 数据标识id向左移17位(12+5) */
+    /** 数据标识id向左移20位(12+8) */
     private final long datacenterIdShift = sequenceBits + workerIdBits;
 
-    /** 时间截向左移22位(5+5+12) */
+    /** 时间截向左移24位(12+8+4) */
     private final long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
 
     /** 生成序列的掩码，这里为4095 (0b111111111111=0xfff=4095) */
@@ -58,10 +58,17 @@ public class GIdUtil {
 
     /**
      * 构造函数
-     * @param workerId 工作ID (0~31)
-     * @param datacenterId 数据中心ID (0~31)
+     * @param datacenterId 数据中心ID (0~15)
      */
-    public GIdUtil(long workerId, long datacenterId) {
+    public GIdUtil(long datacenterId) {
+        long workerId;
+        try{
+            String[] ip = IpUtil.getLocalIP().split("\\.");
+            workerId = Long.valueOf(ip[ip.length - 1]).longValue();
+        }catch(Exception e){
+            throw new IllegalArgumentException(String.format("worker Id can't be greater than %d or less than 0", maxWorkerId));
+        }
+
         if (workerId > maxWorkerId || workerId < 0) {
             throw new IllegalArgumentException(String.format("worker Id can't be greater than %d or less than 0", maxWorkerId));
         }
@@ -129,5 +136,6 @@ public class GIdUtil {
     protected long timeGen() {
         return System.currentTimeMillis();
     }
+
 
 }
